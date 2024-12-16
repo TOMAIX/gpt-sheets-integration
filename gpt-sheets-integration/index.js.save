@@ -1,0 +1,46 @@
+cd gpt-sheets-integration   # Acesse a pasta do projeto
+nano index.js               # Edite o arquivo usando nano
+
+x
+ˆx
+import express from 'express';
+import bodyParser from 'body-parser';
+import fetch from 'node-fetch';
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(bodyParser.json());
+
+app.post('/send-to-sheets', async (req, res) => {
+  try {
+    const { loja_id, descricao_atendimento } = req.body;
+
+    if (!loja_id || !descricao_atendimento) {
+      return res.status(400).send("Erro: Dados incompletos.");
+    }
+
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGzPlWGd-4aSTPqjM3riU6R0Jd8PIRykcRStxJBVvSJo7u1ubdbSRT2L326_UODqgW/exec";
+
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        loja_id: loja_id,
+        descricao_atendimento: descricao_atendimento
+      }),
+    });
+
+    const result = await response.text();
+    res.status(200).send({ message: "Dados enviados com sucesso!", result });
+  } catch (error) {
+    console.error("Erro ao enviar dados:", error);
+    res.status(500).send("Erro ao processar os dados.");
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
