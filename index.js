@@ -1,10 +1,12 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import cors from 'cors';  // Importar o módulo CORS
 import fetch from 'node-fetch';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors());  // Permitir requisições de origens externas
 app.use(bodyParser.json());
 
 app.post('/send-to-sheets', async (req, res) => {
@@ -19,9 +21,7 @@ app.post('/send-to-sheets', async (req, res) => {
 
     const response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         loja_id: loja_id,
         descricao_atendimento: descricao_atendimento
@@ -39,4 +39,5 @@ app.post('/send-to-sheets', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
 
