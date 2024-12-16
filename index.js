@@ -15,7 +15,7 @@ app.post('/send-to-sheets', async (req, res) => {
       return res.status(400).send("Erro: Dados incompletos.");
     }
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGzPlWGd-4aSTPqjM3riU6R0Jd8PIRykcRStxJBVvSJo7u1ubdbSRT2L326_UODqgW/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxfztaAf2zBuETKrpNHM20pQeCvTPJN5dpFDq_iU8deBWj6UQvrXEol9KMC60DmZqS_/exec";
 
     const response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
@@ -39,3 +39,4 @@ app.post('/send-to-sheets', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
