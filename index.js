@@ -35,6 +35,9 @@ app.post('/send-to-sheets', async (req, res) => {
     res.status(500).send("Erro ao processar os dados.");
   }
 });
+app.get('/', (req, res) => {
+  res.send('Servidor funcionando! 🚀');
+});
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
