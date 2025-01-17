@@ -43,6 +43,7 @@ app.post('/send-to-sheets', async (req, res) => {
             values: value,
         };
 
+        // Envia os dados para o Google Sheets
         await sheets.spreadsheets.values.append({
             spreadsheetId,
             range,
@@ -50,6 +51,7 @@ app.post('/send-to-sheets', async (req, res) => {
             resource,
         });
 
+        // Resposta de sucesso
         res.send({
             message: 'Dados recebidos e processados!',
             loja_id: loja_id,
@@ -57,11 +59,12 @@ app.post('/send-to-sheets', async (req, res) => {
         });
     } catch (error) {
         console.error('Erro ao registrar dados no Google Sheets:', error);
+        // Resposta de erro
         res.status(500).send({ message: 'Erro ao registrar dados no Google Sheets' });
     }
 });
 
 // Inicia o servidor na porta configurada
 app.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`);  // Corrigido o log
+    console.log(`Servidor rodando na porta ${port}`);  // Log de inicialização do servidor
 });
