@@ -63,5 +63,5 @@ app.post('/send-to-sheets', async (req, res) => {
 
 // Inicia o servidor na porta configurada
 app.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`);
+    console.log(`Servidor rodando na porta ${port}`);  // Corrigido o log
 });
