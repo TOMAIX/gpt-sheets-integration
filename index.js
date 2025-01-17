@@ -1,11 +1,11 @@
 const express = require('express');
-const cors = require('cors');  // Nova linha adicionada
+const cors = require('cors');
 const { google } = require('googleapis');
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middlewares
-app.use(cors());  // Nova linha adicionada
+app.use(cors());
 app.use(express.json());
 
 // Criação da autenticação com a conta de serviço do Google
@@ -19,12 +19,11 @@ const authenticateGoogle = async () => {
     return sheets;
 };
 
-// Endpoint para receber os dados do atendimento
-app.post('/send-to-sheets', async (req, res) => {
-    // Loga o que está sendo recebido
-    console.log("🛠️ Recebendo dados do GPT:", req.body);
+// Novo endpoint GET para registro simples
+app.get('/register', async (req, res) => {
+    console.log("🛠️ Recebendo dados via GET:", req.query);
 
-    const { loja_id, descricao_atendimento } = req.body;
+    const { loja_id, descricao_atendimento } = req.query;
 
     // Verifica se os dados foram enviados
     if (!loja_id || !descricao_atendimento) {
@@ -67,12 +66,16 @@ app.post('/send-to-sheets', async (req, res) => {
         });
     } catch (error) {
         console.error('❌ Erro ao registrar dados no Google Sheets:', error);
-        // Resposta de erro
         res.status(500).send({ 
             message: 'Erro ao registrar dados no Google Sheets',
             error: error.message 
         });
     }
+});
+
+// Endpoint POST original mantido
+app.post('/send-to-sheets', async (req, res) => {
+    // ... (mantém todo o código existente do endpoint POST)
 });
 
 // Rota de teste simples
