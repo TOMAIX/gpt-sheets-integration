@@ -19,6 +19,9 @@ const authenticateGoogle = async () => {
 
 // Endpoint para receber os dados do atendimento
 app.post('/send-to-sheets', async (req, res) => {
+    // Loga o que está sendo recebido
+    console.log("🛠️ Recebendo dados do GPT:", req.body);
+
     const { loja_id, descricao_atendimento } = req.body;
 
     // Verifica se os dados foram enviados
