@@ -20,6 +20,7 @@
   "homepage": "https://github.com/TOMAIX/gpt-sheets-integration#readme",
   "dependencies": {
     "express": "^4.21.2",
+    "googleapis": "^144.0.0",
     "node-fetch": "^3.3.2"
   }
 }
