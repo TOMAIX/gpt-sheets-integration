@@ -1,26 +1,14 @@
 {
   "name": "gpt-sheets-integration",
   "version": "1.0.0",
-  "description": "Servidor intermediário para integração do GPT com Google Sheets",
+  "description": "Integração entre GPT e Google Sheets",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/TOMAIX/gpt-sheets-integration.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/TOMAIX/gpt-sheets-integration/issues"
-  },
-  "homepage": "https://github.com/TOMAIX/gpt-sheets-integration#readme",
   "dependencies": {
-    "express": "^4.21.2",
-    "googleapis": "^144.0.0",
-    "node-fetch": "^3.3.2"
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "googleapis": "^129.0.0"
+  },
+  "scripts": {
+    "start": "node index.js"
   }
 }
