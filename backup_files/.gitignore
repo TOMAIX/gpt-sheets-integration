@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Build
+dist/
+build/
+
+# Google API credentials
+<<<<<<< HEAD
+credentials.json
+=======
+credentials.json
+>>>>>>> 5ccee6c2152527ebb8b03998d0050658c4d85d8c
