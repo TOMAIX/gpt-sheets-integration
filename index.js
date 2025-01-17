@@ -9,7 +9,7 @@ app.use(express.json());
 // Criação da autenticação com a conta de serviço do Google
 const authenticateGoogle = async () => {
     const auth = new google.auth.GoogleAuth({
-        keyFile: './credentials.json', // Caminho do arquivo de credenciais
+        credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS), // Lê as credenciais da variável de ambiente
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
     const client = await auth.getClient();
