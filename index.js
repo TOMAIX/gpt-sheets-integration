@@ -1,15 +1,17 @@
-const express = require('express');  // Importa o Express
-const { google } = require('googleapis');  // Importa o Google APIs
-const app = express();  // Cria uma instância do Express
-const port = process.env.PORT || 3000;  // Define a porta
+const express = require('express');
+const cors = require('cors');  // Nova linha adicionada
+const { google } = require('googleapis');
+const app = express();
+const port = process.env.PORT || 3000;
 
-// Middleware para processar o corpo da requisição em JSON
+// Middlewares
+app.use(cors());  // Nova linha adicionada
 app.use(express.json());
 
 // Criação da autenticação com a conta de serviço do Google
 const authenticateGoogle = async () => {
     const auth = new google.auth.GoogleAuth({
-        credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS), // Lê as credenciais da variável de ambiente
+        credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
     const client = await auth.getClient();
@@ -26,18 +28,19 @@ app.post('/send-to-sheets', async (req, res) => {
 
     // Verifica se os dados foram enviados
     if (!loja_id || !descricao_atendimento) {
+        console.log("❌ Dados faltando:", { loja_id, descricao_atendimento });
         return res.status(400).send({ message: "Dados faltando: loja_id ou descricao_atendimento" });
     }
 
     try {
         // Autenticação com o Google Sheets
         const sheets = await authenticateGoogle();
-
-        // Defina a ID da sua planilha do Google Sheets
-        const spreadsheetId = '1LnuZSS55zNOaRVrQggbAJQ1G-epN0TbZzR7i4iEoTVo'; // Substitua pelo seu ID
+        
+        // ID da planilha
+        const spreadsheetId = '1LnuZSS55zNOaRVrQggbAJQ1G-epN0TbZzR7i4iEoTVo';
 
         // Grava os dados na planilha
-        const range = 'Sheet1!A2'; // Começa na linha 2, abaixo dos cabeçalhos
+        const range = 'Sheet1!A2';
         const value = [
             [new Date().toLocaleString(), loja_id, descricao_atendimento],
         ];
@@ -47,12 +50,14 @@ app.post('/send-to-sheets', async (req, res) => {
         };
 
         // Envia os dados para o Google Sheets
+        console.log("📝 Tentando escrever na planilha...");
         await sheets.spreadsheets.values.append({
             spreadsheetId,
             range,
             valueInputOption: 'RAW',
             resource,
         });
+        console.log("✅ Dados escritos com sucesso!");
 
         // Resposta de sucesso
         res.send({
@@ -61,13 +66,21 @@ app.post('/send-to-sheets', async (req, res) => {
             descricao_atendimento: descricao_atendimento,
         });
     } catch (error) {
-        console.error('Erro ao registrar dados no Google Sheets:', error);
+        console.error('❌ Erro ao registrar dados no Google Sheets:', error);
         // Resposta de erro
-        res.status(500).send({ message: 'Erro ao registrar dados no Google Sheets' });
+        res.status(500).send({ 
+            message: 'Erro ao registrar dados no Google Sheets',
+            error: error.message 
+        });
     }
 });
 
-// Inicia o servidor na porta configurada
+// Rota de teste simples
+app.get('/', (req, res) => {
+    res.send('Servidor funcionando! 🚀');
+});
+
+// Inicia o servidor
 app.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`);  // Log de inicialização do servidor
+    console.log(`🚀 Servidor rodando na porta ${port}`);
 });
