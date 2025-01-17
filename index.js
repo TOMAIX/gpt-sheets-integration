@@ -19,19 +19,22 @@ const authenticateGoogle = async () => {
     return sheets;
 };
 
-// Endpoint Webhook simplificado
-app.post('/webhook', async (req, res) => {
-    console.log("🔍 Recebendo dados no webhook:", req.body);
+// Endpoint GET para registro fácil
+app.get('/register', async (req, res) => {
+    console.log("🔍 Recebendo dados via GET:", req.query);
     
     try {
-        const { loja_id, descricao_atendimento } = req.body;
+        const { loja_id, descricao_atendimento } = req.query;
         
         if (!loja_id || !descricao_atendimento) {
-            console.log("❌ Dados incompletos:", { loja_id, descricao_atendimento });
-            return res.status(400).json({
-                success: false,
-                message: "Dados incompletos - necessário loja_id e descricao_atendimento"
-            });
+            return res.send(`
+                <html>
+                    <body style="font-family: Arial; text-align: center; padding: 50px;">
+                        <h2>❌ Erro: Dados incompletos</h2>
+                        <p>Faltam informações necessárias.</p>
+                    </body>
+                </html>
+            `);
         }
 
         // Conecta ao Google Sheets
@@ -42,8 +45,6 @@ app.post('/webhook', async (req, res) => {
         const range = 'Sheet1!A2';
         const values = [[new Date().toLocaleString(), loja_id, descricao_atendimento]];
 
-        console.log("📝 Tentando escrever na planilha...");
-
         // Registra na planilha
         await sheets.spreadsheets.values.append({
             spreadsheetId,
@@ -52,26 +53,26 @@ app.post('/webhook', async (req, res) => {
             resource: { values }
         });
 
-        console.log("✅ Dados registrados com sucesso!");
-
-        // Responde sucesso
-        res.json({
-            success: true,
-            message: "Atendimento registrado com sucesso",
-            data: {
-                loja_id,
-                descricao_atendimento,
-                timestamp: new Date().toLocaleString()
-            }
-        });
+        // Retorna página de sucesso
+        res.send(`
+            <html>
+                <body style="font-family: Arial; text-align: center; padding: 50px;">
+                    <h2>✅ Atendimento Registrado!</h2>
+                    <p>Você já pode fechar esta janela.</p>
+                </body>
+            </html>
+        `);
 
     } catch (error) {
         console.error('❌ Erro:', error);
-        res.status(500).json({
-            success: false,
-            message: "Erro ao registrar atendimento",
-            error: error.message
-        });
+        res.send(`
+            <html>
+                <body style="font-family: Arial; text-align: center; padding: 50px;">
+                    <h2>❌ Erro no Registro</h2>
+                    <p>Houve um problema ao registrar o atendimento.</p>
+                </body>
+            </html>
+        `);
     }
 });
 
