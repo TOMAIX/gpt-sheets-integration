@@ -1,12 +1,20 @@
 const express = require('express');
 const cors = require('cors');
 const { google } = require('googleapis');
+const twilio = require('twilio');
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Configuração Twilio
+const twilioClient = twilio(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN
+);
 
 // Autenticação Google
 const authenticateGoogle = async () => {
@@ -19,22 +27,27 @@ const authenticateGoogle = async () => {
     return sheets;
 };
 
-// Endpoint GET para registro fácil
-app.get('/register', async (req, res) => {
-    console.log("🔍 Recebendo dados via GET:", req.query);
+// Endpoint para receber mensagens do Twilio
+app.post('/message', async (req, res) => {
+    console.log("📱 Mensagem recebida:", req.body);
     
     try {
-        const { loja_id, descricao_atendimento } = req.query;
+        const messageBody = req.body.Body; // Texto da mensagem
+        const fromNumber = req.body.From;  // Número do remetente
         
-        if (!loja_id || !descricao_atendimento) {
-            return res.send(`
-                <html>
-                    <body style="font-family: Arial; text-align: center; padding: 50px;">
-                        <h2>❌ Erro: Dados incompletos</h2>
-                        <p>Faltam informações necessárias.</p>
-                    </body>
-                </html>
-            `);
+        // Extrai o ID da loja e a descrição
+        const matches = messageBody.match(/loja\s*(\d+)/i);
+        const loja_id = matches ? matches[1] : null;
+        const descricao_atendimento = messageBody;
+
+        if (!loja_id) {
+            // Se não encontrou o número da loja, pede para o usuário
+            await twilioClient.messages.create({
+                body: 'Por favor, informe o número da loja.',
+                to: fromNumber,
+                from: process.env.TWILIO_PHONE_NUMBER
+            });
+            return res.sendStatus(200);
         }
 
         // Conecta ao Google Sheets
@@ -53,32 +66,18 @@ app.get('/register', async (req, res) => {
             resource: { values }
         });
 
-        // Retorna página de sucesso
-        res.send(`
-            <html>
-                <body style="font-family: Arial; text-align: center; padding: 50px;">
-                    <h2>✅ Atendimento Registrado!</h2>
-                    <p>Você já pode fechar esta janela.</p>
-                </body>
-            </html>
-        `);
+        // Envia confirmação
+        await twilioClient.messages.create({
+            body: '✅ Atendimento registrado com sucesso!',
+            to: fromNumber,
+            from: process.env.TWILIO_PHONE_NUMBER
+        });
 
+        res.sendStatus(200);
     } catch (error) {
         console.error('❌ Erro:', error);
-        res.send(`
-            <html>
-                <body style="font-family: Arial; text-align: center; padding: 50px;">
-                    <h2>❌ Erro no Registro</h2>
-                    <p>Houve um problema ao registrar o atendimento.</p>
-                </body>
-            </html>
-        `);
+        res.status(500).json({ error: error.message });
     }
-});
-
-// Rota de teste simples
-app.get('/', (req, res) => {
-    res.send('Servidor funcionando! 🚀');
 });
 
 // Inicia servidor
