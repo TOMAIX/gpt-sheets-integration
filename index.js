@@ -4,11 +4,9 @@ const { google } = require('googleapis');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Autenticação Google
 const authenticateGoogle = async () => {
     const auth = new google.auth.GoogleAuth({
         credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
@@ -19,26 +17,15 @@ const authenticateGoogle = async () => {
     return sheets;
 };
 
-// Rota de teste
-app.get('/', (req, res) => {
-    res.send('Servidor funcionando! 🚀');
-});
-
-// Endpoint curto e amigável
-app.get('/r/:codigo', async (req, res) => {
+// Endpoint simplificado
+app.post('/registrar', async (req, res) => {
     try {
-        const { codigo } = req.params;
+        const { descricao } = req.body;
         
-        // Decodifica o código (exemplo: L5-cliente-pediu-informacao)
-        const [loja, ...descricaoParts] = codigo.split('-');
-        const loja_id = loja.replace('L', '');
-        const descricao = descricaoParts.join(' ');
-
-        // Registra na planilha
         const sheets = await authenticateGoogle();
         const spreadsheetId = '1LnuZSS55zNOaRVrQggbAJQ1G-epN0TbZzR7i4iEoTVo';
-        const range = 'Sheet1!A2';
-        const values = [[new Date().toLocaleString(), loja_id, descricao]];
+        const range = 'Loja 1!A2';  // Mudado para "Loja 1"
+        const values = [[new Date().toLocaleString(), descricao]];
 
         await sheets.spreadsheets.values.append({
             spreadsheetId,
@@ -47,84 +34,13 @@ app.get('/r/:codigo', async (req, res) => {
             resource: { values }
         });
 
-        // Retorna uma página amigável para mobile
-        res.send(`
-            <html>
-                <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <style>
-                        body { 
-                            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-                            text-align: center; 
-                            padding: 20px;
-                            background: #f0f2f5;
-                            margin: 0;
-                            height: 100vh;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                        }
-                        .card {
-                            background: white;
-                            padding: 30px;
-                            border-radius: 15px;
-                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                            width: 85%;
-                            max-width: 320px;
-                            margin: auto;
-                        }
-                        .success {
-                            font-size: 64px;
-                            margin: 10px 0;
-                        }
-                        h2 {
-                            margin: 15px 0;
-                            color: #1a1a1a;
-                        }
-                        .close {
-                            margin-top: 20px;
-                            color: #666;
-                            font-size: 15px;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="card">
-                        <div class="success">✅</div>
-                        <h2>Atendimento Registrado!</h2>
-                        <p class="close">Você já pode fechar esta janela</p>
-                    </div>
-                </body>
-            </html>
-        `);
+        res.json({ success: true, message: "Registrado com sucesso" });
     } catch (error) {
         console.error('Erro:', error);
-        res.status(500).send(`
-            <html>
-                <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <style>
-                        /* mesmo CSS anterior */
-                    </style>
-                </head>
-                <body>
-                    <div class="card">
-                        <div class="error">❌</div>
-                        <h2>Erro ao Registrar</h2>
-                        <p class="close">Por favor, tente novamente</p>
-                    </div>
-                </body>
-            </html>
-        `);
+        res.status(500).json({ success: false, message: "Erro ao registrar" });
     }
 });
 
-// IMPORTANTE: Inicialização do servidor com log
 const server = app.listen(port, '0.0.0.0', () => {
     console.log(`🚀 Servidor rodando em 0.0.0.0:${port}`);
-});
-
-// Tratamento de erros
-server.on('error', (error) => {
-    console.error('Erro no servidor:', error);
 });
