@@ -4,7 +4,25 @@ const { google } = require('googleapis');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ... (código de autenticação do Google)
+// Middlewares
+app.use(cors());
+app.use(express.json());
+
+// Autenticação Google
+const authenticateGoogle = async () => {
+    const auth = new google.auth.GoogleAuth({
+        credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS),
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: 'v4', auth: client });
+    return sheets;
+};
+
+// Rota de teste
+app.get('/', (req, res) => {
+    res.send('Servidor funcionando! 🚀');
+});
 
 // Endpoint curto e amigável
 app.get('/r/:codigo', async (req, res) => {
@@ -99,4 +117,14 @@ app.get('/r/:codigo', async (req, res) => {
             </html>
         `);
     }
+});
+
+// IMPORTANTE: Inicialização do servidor com log
+const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 Servidor rodando em 0.0.0.0:${port}`);
+});
+
+// Tratamento de erros
+server.on('error', (error) => {
+    console.error('Erro no servidor:', error);
 });
