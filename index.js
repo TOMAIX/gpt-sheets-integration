@@ -1,20 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const { google } = require('googleapis');
-const twilio = require('twilio');
+const TelegramBot = require('node-telegram-bot-api');
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Configuração Twilio
-const twilioClient = twilio(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_AUTH_TOKEN
-);
+// Configuração do bot do Telegram
+const token = process.env.TELEGRAM_BOT_TOKEN;
+const bot = new TelegramBot(token, { polling: true });
 
 // Autenticação Google
 const authenticateGoogle = async () => {
@@ -27,38 +24,14 @@ const authenticateGoogle = async () => {
     return sheets;
 };
 
-// Endpoint para receber mensagens do Twilio
-app.post('/message', async (req, res) => {
-    console.log("📱 Mensagem recebida:", req.body);
-    
+// Função para registrar atendimento
+const registrarAtendimento = async (loja_id, descricao_atendimento) => {
     try {
-        const messageBody = req.body.Body; // Texto da mensagem
-        const fromNumber = req.body.From;  // Número do remetente
-        
-        // Extrai o ID da loja e a descrição
-        const matches = messageBody.match(/loja\s*(\d+)/i);
-        const loja_id = matches ? matches[1] : null;
-        const descricao_atendimento = messageBody;
-
-        if (!loja_id) {
-            // Se não encontrou o número da loja, pede para o usuário
-            await twilioClient.messages.create({
-                body: 'Por favor, informe o número da loja.',
-                to: fromNumber,
-                from: process.env.TWILIO_PHONE_NUMBER
-            });
-            return res.sendStatus(200);
-        }
-
-        // Conecta ao Google Sheets
         const sheets = await authenticateGoogle();
-        
-        // Prepara dados
         const spreadsheetId = '1LnuZSS55zNOaRVrQggbAJQ1G-epN0TbZzR7i4iEoTVo';
         const range = 'Sheet1!A2';
         const values = [[new Date().toLocaleString(), loja_id, descricao_atendimento]];
 
-        // Registra na planilha
         await sheets.spreadsheets.values.append({
             spreadsheetId,
             range,
@@ -66,21 +39,43 @@ app.post('/message', async (req, res) => {
             resource: { values }
         });
 
-        // Envia confirmação
-        await twilioClient.messages.create({
-            body: '✅ Atendimento registrado com sucesso!',
-            to: fromNumber,
-            from: process.env.TWILIO_PHONE_NUMBER
-        });
-
-        res.sendStatus(200);
+        return true;
     } catch (error) {
-        console.error('❌ Erro:', error);
-        res.status(500).json({ error: error.message });
+        console.error('Erro ao registrar:', error);
+        return false;
+    }
+};
+
+// Manipulador de mensagens do Telegram
+bot.on('message', async (msg) => {
+    const chatId = msg.chat.id;
+    const text = msg.text;
+
+    if (!text) return;
+
+    // Verifica se a mensagem menciona uma loja
+    const lojaMatch = text.match(/loja\s*(\d+)/i);
+    
+    if (lojaMatch) {
+        const loja_id = lojaMatch[1];
+        const sucesso = await registrarAtendimento(loja_id, text);
+        
+        if (sucesso) {
+            bot.sendMessage(chatId, '✅ Atendimento registrado com sucesso!');
+        } else {
+            bot.sendMessage(chatId, '❌ Erro ao registrar atendimento. Tente novamente.');
+        }
+    } else {
+        bot.sendMessage(chatId, 'Por favor, me diga o número da loja.');
     }
 });
 
-// Inicia servidor
+// Rota de teste
+app.get('/', (req, res) => {
+    res.send('Servidor funcionando! 🚀');
+});
+
+// Inicia o servidor
 app.listen(port, () => {
     console.log(`🚀 Servidor rodando na porta ${port}`);
 });
